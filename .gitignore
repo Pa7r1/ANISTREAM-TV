@@ -1,0 +1,33 @@
+# ── Build outputs ──────────────────────────────────────────────────────────────
+/build/
+app/build/
+
+# ── Gradle cache ───────────────────────────────────────────────────────────────
+.gradle/
+gradle-app.setting
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# ── Configuración local (rutas del SDK, URL de Consumet) ──────────────────────
+local.properties
+
+# ── Claves de firma (nunca subir al repo) ─────────────────────────────────────
+*.jks
+*.keystore
+
+# ── Archivos de IA / planificación (Claude Code) ──────────────────────────────
+CLAUDE.md
+CLAUDE_MEMORY.md
+plan_anistream.md
+.claude/
+
+# ── IDE ────────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+Thumbs.db
+
+# ── Logs ───────────────────────────────────────────────────────────────────────
+*.log

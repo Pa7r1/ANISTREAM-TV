@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AniStream TV</string>
+    <string name="row_trending">Tendencias</string>
+    <string name="row_recent">Recientes</string>
+    <string name="row_episodes">Episodios</string>
+    <string name="row_continue">Continuar viendo</string>
+    <string name="row_favorites">Mis favoritos</string>
+    <string name="loading">Cargando…</string>
+    <string name="error_network">Sin conexión. Verifica tu red.</string>
+    <string name="error_generic">Ocurrió un error. Intenta de nuevo.</string>
+    <string name="no_results">Sin resultados</string>
+    <string name="action_watch">Ver</string>
+    <string name="action_favorite">Favorito</string>
+    <string name="detail_genres">Géneros: %s</string>
+    <string name="detail_episodes_count">Episodios: %d</string>
+    <string name="episode_number">Episodio %d</string>
+</resources>
