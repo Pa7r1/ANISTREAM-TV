@@ -8,25 +8,31 @@ import retrofit2.http.Query
 
 interface ConsumetService {
 
-    /** Busca un anime por nombre, retorna lista de resultados */
-    @GET("anime/gogoanime/{query}")
+    @GET("anime/{provider}/{query}")
     suspend fun searchAnime(
+        @Path("provider") provider: String,
         @Path("query") query: String,
         @Query("page") page: Int = 1
     ): ConsumetSearchResponse
 
-    /** Info de un anime con lista completa de episodios */
-    @GET("anime/gogoanime/info/{id}")
+    @GET("anime/{provider}/info/{id}")
     suspend fun getAnimeInfo(
+        @Path("provider") provider: String,
         @Path("id") animeId: String
     ): ConsumetAnimeInfo
 
-    /** Fuentes de streaming para un episodio */
-    @GET("anime/gogoanime/watch/{episodeId}")
+    @GET("anime/{provider}/watch/{episodeId}")
     suspend fun getStreamSources(
+        @Path("provider") provider: String,
         @Path("episodeId") episodeId: String,
-        @Query("server") server: String = "gogocdn"
+        @Query("server") server: String? = null
     ): ConsumetStreamResponse
+
+    @GET("anime/{provider}/servers/{episodeId}")
+    suspend fun getServers(
+        @Path("provider") provider: String,
+        @Path("episodeId") episodeId: String
+    ): List<ConsumetServerEntry>
 }
 
 // ── Search ────────────────────────────────────────────────────────────────────
@@ -57,6 +63,13 @@ data class ConsumetAnimeInfo(
 data class ConsumetEpisode(
     @SerializedName("id") val id: String,
     @SerializedName("number") val number: Int?,
+    @SerializedName("url") val url: String?
+)
+
+// ── Servers list per episode ──────────────────────────────────────────────────
+
+data class ConsumetServerEntry(
+    @SerializedName("name") val name: String?,
     @SerializedName("url") val url: String?
 )
 

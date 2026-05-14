@@ -1,9 +1,11 @@
 package com.anistream.tv.ui.player
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.anistream.tv.data.model.StreamSource
+import com.anistream.tv.util.Constants
 import com.anistream.tv.util.ServiceLocator
 import com.anistream.tv.util.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +35,10 @@ class PlayerViewModel(
             _state.value = UiState.Loading
             try {
                 val sources = fetchSources()
-                if (sources.isEmpty()) throw Exception("No hay fuentes disponibles para este episodio")
+                if (sources.isEmpty()) {
+                    val providers = Constants.ANIME_PROVIDERS.joinToString()
+                    throw Exception("No hay fuentes disponibles. Probados: $providers")
+                }
                 _state.value = UiState.Success(sources)
             } catch (e: Exception) {
                 _state.value = UiState.Error(e.message ?: "Error al cargar el video")
@@ -42,18 +47,51 @@ class PlayerViewModel(
     }
 
     private suspend fun fetchSources(): List<StreamSource> {
-        // 1. Buscar el anime en Consumet por título
-        val searchResults = consumet.searchAnime(animeTitle).results
-        val animeResult = searchResults?.firstOrNull() ?: return emptyList()
+        for (provider in Constants.ANIME_PROVIDERS) {
+            try {
+                val results = consumet.searchAnime(provider, animeTitle).results.orEmpty()
+                val match = results.firstOrNull()
+                if (match == null) {
+                    Log.w(TAG, "provider=$provider: sin resultados para '$animeTitle'")
+                    continue
+                }
 
-        // 2. Obtener lista de episodios del anime
-        val animeInfo = consumet.getAnimeInfo(animeResult.id)
-        val episode = animeInfo.episodes?.find { it.number == episodeNumber }
-            ?: animeInfo.episodes?.getOrNull(episodeNumber - 1)
-            ?: return emptyList()
+                val info = consumet.getAnimeInfo(provider, match.id)
+                val episode = info.episodes?.find { it.number == episodeNumber }
+                    ?: info.episodes?.getOrNull(episodeNumber - 1)
+                if (episode == null) {
+                    Log.w(TAG, "provider=$provider: episodio $episodeNumber no encontrado en ${match.id}")
+                    continue
+                }
 
-        // 3. Obtener fuentes de streaming
-        return consumet.getStreamSources(episode.id).toStreamSources()
+                val defaultSources = runCatching {
+                    consumet.getStreamSources(provider, episode.id, null).toStreamSources()
+                }.onFailure { Log.w(TAG, "provider=$provider default watch fallo: ${it.message}") }
+                    .getOrNull().orEmpty()
+                if (defaultSources.isNotEmpty()) {
+                    Log.i(TAG, "provider=$provider: ${defaultSources.size} fuentes (default server)")
+                    return defaultSources
+                }
+
+                val servers = runCatching { consumet.getServers(provider, episode.id) }
+                    .onFailure { Log.w(TAG, "provider=$provider /servers fallo: ${it.message}") }
+                    .getOrNull().orEmpty()
+                for (s in servers) {
+                    val name = s.name ?: continue
+                    val src = runCatching {
+                        consumet.getStreamSources(provider, episode.id, name).toStreamSources()
+                    }.onFailure { Log.w(TAG, "provider=$provider server=$name fallo: ${it.message}") }
+                        .getOrNull().orEmpty()
+                    if (src.isNotEmpty()) {
+                        Log.i(TAG, "provider=$provider server=$name: ${src.size} fuentes")
+                        return src
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "provider=$provider error general: ${e.message}")
+            }
+        }
+        return emptyList()
     }
 
     class Factory(
@@ -64,5 +102,9 @@ class PlayerViewModel(
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
             PlayerViewModel(animeTitle, episodeNumber, animeId) as T
+    }
+
+    companion object {
+        private const val TAG = "PlayerVM"
     }
 }

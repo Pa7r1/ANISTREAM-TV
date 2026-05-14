@@ -17,4 +17,12 @@ object Constants {
 
     const val SEARCH_DEBOUNCE_MS = 500L
     const val ITEMS_PER_PAGE = 20
+
+    // Providers de Consumet a probar, en orden. Validado contra el server local
+    // anistream/consumet:v1.5 (`@consumet/extensions` 1.8.8, post-DMCA mar/2026):
+    //  - animesaturn: search+info+watch entregan m3u8 HLS reproducible (multi-resolución, subs ITA)
+    //  - animeunity: search+info funcionan; watch a veces sin sources (fallback)
+    //  - animekai: search+info OK, watch falla porque enc-dec.app rechaza el dec-mega
+    //  - animepahe: DDoS-Guard tras dominio nuevo (animepahe.pw); deja como último intento
+    val ANIME_PROVIDERS = listOf("animesaturn", "animeunity", "animekai", "animepahe")
 }
