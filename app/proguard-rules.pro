@@ -11,6 +11,12 @@
 -keep class com.google.gson.** { *; }
 -keepclassmembers class * { @com.google.gson.annotations.SerializedName <fields>; }
 
+# Gson 2.10+: mantener la firma genérica de los TypeToken anónimos. AppPreferences usa
+# object : TypeToken<Set<Int>>() {} y TypeToken<List<Int>>() {}; sin estas reglas R8
+# strippea el generic y Gson tira "TypeToken must be created with a type argument".
+-keep,allowobfuscation,allowshrinking class com.google.gson.reflect.TypeToken
+-keep,allowobfuscation,allowshrinking class * extends com.google.gson.reflect.TypeToken
+
 # Data models (needed for Gson deserialization)
 -keep class com.anistream.tv.data.model.** { *; }
 

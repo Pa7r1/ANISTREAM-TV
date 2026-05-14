@@ -1,8 +1,20 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
 }
+
+val localProperties = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) FileInputStream(f).use { load(it) }
+}
+val consumetBaseUrl: String =
+    localProperties.getProperty("CONSUMET_BASE_URL")
+        ?: (project.findProperty("CONSUMET_BASE_URL") as String?)
+        ?: "http://10.0.2.2:3000"
 
 android {
     namespace = "com.anistream.tv"
@@ -12,14 +24,10 @@ android {
         applicationId = "com.anistream.tv"
         minSdk = 21
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.3"
+        versionCode = 5
+        versionName = "1.4"
 
-        buildConfigField(
-            "String",
-            "CONSUMET_BASE_URL",
-            "\"${project.findProperty("CONSUMET_BASE_URL") ?: "http://10.0.2.2:3000"}\""
-        )
+        buildConfigField("String", "CONSUMET_BASE_URL", "\"$consumetBaseUrl\"")
     }
 
     buildFeatures {
