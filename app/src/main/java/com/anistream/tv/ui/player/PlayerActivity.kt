@@ -1,7 +1,9 @@
 package com.anistream.tv.ui.player
 
+import android.app.AlertDialog
 import android.net.Uri
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -24,6 +26,7 @@ class PlayerActivity : FragmentActivity() {
         const val EXTRA_ANIME_ID = "extra_anime_id"
         const val EXTRA_ANIME_TITLE = "extra_anime_title"
         const val EXTRA_EPISODE_NUMBER = "extra_episode_number"
+        private const val MENU_HINT_TIMEOUT_MS = 4000L
     }
 
     private lateinit var viewModel: PlayerViewModel
@@ -34,6 +37,7 @@ class PlayerActivity : FragmentActivity() {
     private var sourceIndex = 0
     private var currentSources: List<StreamSource> = emptyList()
     private var refetchOnError = true
+    private var hintShown = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,6 +68,14 @@ class PlayerActivity : FragmentActivity() {
                         currentSources = state.data
                         sourceIndex = 0
                         playSource(currentSources[sourceIndex])
+                        if (!hintShown && currentSources.size > 1) {
+                            hintShown = true
+                            Toast.makeText(
+                                this@PlayerActivity,
+                                "Pulsá MENÚ o INFO para cambiar idioma/servidor",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                     }
                     is UiState.Error -> {
                         progressBar.visibility = View.GONE
@@ -89,9 +101,14 @@ class PlayerActivity : FragmentActivity() {
 
             exo.playWhenReady = true
 
+            Toast.makeText(
+                this,
+                "Reproduciendo: ${source.version ?: "default"} — ${source.server ?: ""}",
+                Toast.LENGTH_SHORT
+            ).show()
+
             exo.addListener(object : Player.Listener {
                 override fun onPlayerError(error: PlaybackException) {
-                    // Intentar siguiente fuente o re-fetch
                     val nextIndex = sourceIndex + 1
                     if (nextIndex < currentSources.size) {
                         sourceIndex = nextIndex
@@ -110,6 +127,50 @@ class PlayerActivity : FragmentActivity() {
                 }
             })
         }
+    }
+
+    /** Intercepta MENÚ/INFO/Y para abrir el selector de versión sin perder progreso. */
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        when (keyCode) {
+            KeyEvent.KEYCODE_MENU,
+            KeyEvent.KEYCODE_INFO,
+            KeyEvent.KEYCODE_BUTTON_Y -> {
+                if (currentSources.size > 1) {
+                    showSourcePicker()
+                    return true
+                }
+            }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    private fun showSourcePicker() {
+        val labels = currentSources.map { s ->
+            val v = s.version ?: "default"
+            val srv = s.server ?: "?"
+            val q = s.quality
+            "$v — $srv — $q"
+        }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("Idioma / Servidor")
+            .setSingleChoiceItems(labels, sourceIndex) { dialog, which ->
+                dialog.dismiss()
+                if (which != sourceIndex) {
+                    val pos = player?.currentPosition ?: 0L
+                    sourceIndex = which
+                    val sel = currentSources[which]
+                    sel.version?.let { v ->
+                        if (v != viewModel.getLanguagePreference() && v in setOf("LAT", "SUB", "ESP")) {
+                            viewModel.setLanguagePreference(v)
+                        }
+                    }
+                    playSource(sel)
+                    // restaurar posición tras el swap
+                    player?.seekTo(pos)
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     override fun onPause() {

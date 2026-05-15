@@ -57,6 +57,8 @@ data class ConsumetSearchResult(
 data class ConsumetAnimeInfo(
     @SerializedName("id") val id: String?,
     @SerializedName("title") val title: String?,
+    @SerializedName("description") val description: String?,
+    @SerializedName("genres") val genres: List<String>?,
     @SerializedName("episodes") val episodes: List<ConsumetEpisode>?
 )
 
@@ -82,7 +84,13 @@ data class ConsumetStreamResponse(
     fun toStreamSources(): List<StreamSource> =
         sources?.mapNotNull { src ->
             if (src.url.isNotBlank())
-                StreamSource(url = src.url, quality = src.quality ?: "default", isM3U8 = src.isM3U8 ?: false)
+                StreamSource(
+                    url = src.url,
+                    quality = src.quality ?: "default",
+                    isM3U8 = src.isM3U8 ?: src.url.endsWith(".m3u8"),
+                    version = src.version,
+                    server = src.server
+                )
             else null
         } ?: emptyList()
 }
@@ -90,5 +98,7 @@ data class ConsumetStreamResponse(
 data class ConsumetSource(
     @SerializedName("url") val url: String,
     @SerializedName("quality") val quality: String?,
-    @SerializedName("isM3U8") val isM3U8: Boolean?
+    @SerializedName("isM3U8") val isM3U8: Boolean?,
+    @SerializedName("version") val version: String?,
+    @SerializedName("server") val server: String?
 )

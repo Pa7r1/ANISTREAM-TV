@@ -57,4 +57,14 @@ class AppPreferences(context: Context) {
         val key = "${Constants.KEY_PROGRESS_PREFIX}${animeId}_$episode"
         return prefs.getLong(key, 0L)
     }
+
+    // ── Preferencia de idioma ──────────────────────────────────────────────────
+
+    fun getLanguagePreference(): String =
+        prefs.getString(Constants.KEY_LANG_PREFERENCE, Constants.DEFAULT_LANG_PREFERENCE)
+            ?: Constants.DEFAULT_LANG_PREFERENCE
+
+    fun setLanguagePreference(value: String) {
+        prefs.edit().putString(Constants.KEY_LANG_PREFERENCE, value).apply()
+    }
 }

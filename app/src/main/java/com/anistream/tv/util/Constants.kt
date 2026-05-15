@@ -18,11 +18,21 @@ object Constants {
     const val SEARCH_DEBOUNCE_MS = 500L
     const val ITEMS_PER_PAGE = 20
 
-    // Providers de Consumet a probar, en orden. Validado contra el server local
-    // anistream/consumet:v1.5 (`@consumet/extensions` 1.8.8, post-DMCA mar/2026):
-    //  - animesaturn: search+info+watch entregan m3u8 HLS reproducible (multi-resolución, subs ITA)
-    //  - animeunity: search+info funcionan; watch a veces sin sources (fallback)
-    //  - animekai: search+info OK, watch falla porque enc-dec.app rechaza el dec-mega
-    //  - animepahe: DDoS-Guard tras dominio nuevo (animepahe.pw); deja como último intento
-    val ANIME_PROVIDERS = listOf("animesaturn", "animeunity", "animekai", "animepahe")
+    // Providers de Consumet a probar, en orden. v1.6: localización estricta al español.
+    // Server `anistream/consumet:v1.6` (Docker local, requiere flaresolverr en :8191):
+    //  - animeflv (www3.animeflv.net): SUB + LAT, sinopsis y géneros en español
+    //  - tioanime (tioanime.com): SUB español, sinopsis y géneros en español
+    // Catálogo italiano (animesaturn/animeunity) eliminado — pedido del usuario.
+    val ANIME_PROVIDERS = listOf("animeflv", "tioanime")
+
+    // Preferencia de audio/idioma. "AUTO" = orden natural del provider.
+    const val KEY_LANG_PREFERENCE = "lang_preference"
+    const val DEFAULT_LANG_PREFERENCE = "LAT"
+    val LANG_OPTIONS = listOf("LAT", "SUB", "ESP", "AUTO")
+    val LANG_LABELS = mapOf(
+        "LAT" to "Dub Latino",
+        "SUB" to "Sub Español",
+        "ESP" to "Dub Español",
+        "AUTO" to "Automático"
+    )
 }
