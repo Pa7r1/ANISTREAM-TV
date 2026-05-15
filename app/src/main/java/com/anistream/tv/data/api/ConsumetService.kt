@@ -89,7 +89,8 @@ data class ConsumetStreamResponse(
                     quality = src.quality ?: "default",
                     isM3U8 = src.isM3U8 ?: src.url.endsWith(".m3u8"),
                     version = src.version,
-                    server = src.server
+                    server = src.server,
+                    headers = src.headers ?: headers
                 )
             else null
         } ?: emptyList()
@@ -100,5 +101,6 @@ data class ConsumetSource(
     @SerializedName("quality") val quality: String?,
     @SerializedName("isM3U8") val isM3U8: Boolean?,
     @SerializedName("version") val version: String?,
-    @SerializedName("server") val server: String?
+    @SerializedName("server") val server: String?,
+    @SerializedName("headers") val headers: Map<String, String>?
 )

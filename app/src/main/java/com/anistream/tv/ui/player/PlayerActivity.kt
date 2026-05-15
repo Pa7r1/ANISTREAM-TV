@@ -13,7 +13,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.PlayerView
 import com.anistream.tv.R
 import com.anistream.tv.data.model.StreamSource
@@ -89,7 +91,28 @@ class PlayerActivity : FragmentActivity() {
 
     private fun playSource(source: StreamSource) {
         releasePlayer()
-        player = ExoPlayer.Builder(this).build().also { exo ->
+
+        // Headers HTTP que el CDN del embed exige (Referer, User-Agent).
+        // Default Referer animeflv.net por si el server no mandó nada.
+        val ua =
+            "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
+        val requestHeaders = mutableMapOf(
+            "User-Agent" to ua,
+            "Referer" to "https://www3.animeflv.net/"
+        )
+        source.headers?.forEach { (k, v) -> requestHeaders[k] = v }
+
+        val httpFactory = DefaultHttpDataSource.Factory()
+            .setUserAgent(requestHeaders["User-Agent"])
+            .setAllowCrossProtocolRedirects(true)
+            .setConnectTimeoutMs(20_000)
+            .setReadTimeoutMs(20_000)
+            .setDefaultRequestProperties(requestHeaders)
+        val mediaSourceFactory = DefaultMediaSourceFactory(httpFactory)
+
+        player = ExoPlayer.Builder(this)
+            .setMediaSourceFactory(mediaSourceFactory)
+            .build().also { exo ->
             playerView.player = exo
 
             val mediaItem = MediaItem.fromUri(Uri.parse(source.url))
